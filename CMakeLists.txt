@@ -1,0 +1,19 @@
+#声明cmake最低版本
+cmake_minimum_required(VERSION 3.17)
+#设置项目名称
+project(hello C)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+#设置可执行文件输出路径，为当前项目源文件的/bin目录下
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#设置头文件所在的文件夹为 include 文件夹
+include_directories(include)
+# 用来指定用哪个版本的 C 语言标准来编译你的代码。 17：值，代表 C17 标准（17年发布的 C 语言标准）
+set(CMAKE_C_STANDARD 17)
+#声明生成的目标文件 和 目标文件所以来的代码文件。 这里生成hello 需要依赖 main.c和 format.c （ 手动罗列文件）
+add_executable(hello main.c src/format.c)
+#将当前目录下所有源文件放到SRC_LIST变量中  。
+#.代表当前目录，他会扫描当前目录下的所有cpp文件， SRC_LIST 可以自己定义叫任何名字 他将所有cpp文件放到 SRC_LIST 这个变量中
+aux_source_directory(. SRC_LIST)
+#是有变量创建
+add_executable(hello2 ${SRC_LIST})
+
