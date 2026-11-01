@@ -14,6 +14,8 @@ add_executable(hello main.c src/format.c)
 #将当前目录下所有源文件放到SRC_LIST变量中  。
 #.代表当前目录，他会扫描当前目录下的所有cpp文件， SRC_LIST 可以自己定义叫任何名字 他将所有cpp文件放到 SRC_LIST 这个变量中
 aux_source_directory(. SRC_LIST)
-#是有变量创建
-add_executable(hello2 ${SRC_LIST})
+#再扫描 src 子目录，否则 format.c 进不来，链接时会报 undefined reference to `result1'
+aux_source_directory(src SRC_LIST_SRC)
+#创建可执行文件hello2 ， 需要将所有源文件都放到可执行文件中。 注意. 只查询本目录下的可执行文件，不递归查询子目录下的可执行文件
+add_executable(hello2 ${SRC_LIST} ${SRC_LIST_SRC})
 
