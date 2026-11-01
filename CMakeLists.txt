@@ -32,8 +32,15 @@ add_library(libformat SHARED ${LIB_SRC})
 add_executable(hello3 main.c)
 # 链接 libformat.so
 target_link_libraries(hello3 libformat)
-# 设置动态库的输出路径
-set(LIB_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+# 设置库的输出路径
+# 注意1: 变量名必须是 CMake 内置的 LIBRARY_OUTPUT_PATH, 不能简写成 LIB_OUTPUT_PATH(那样 CMake 不识别)
+# 注意2: Windows 下 SHARED 库会生成 libformat.dll(运行时) 和 libformat.lib(导入库, 链接时用)
+#        LIBRARY_OUTPUT_PATH 只控制 静态库 和 导入库(.lib) 的输出位置;
+#        而 .dll 属于运行时目标, 必须用 RUNTIME_OUTPUT_DIRECTORY 单独指定, 否则会输出到默认目录
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+set_target_properties(libformat PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib   # 让 .dll 也输出到 lib 目录
+)
 # 设置hello3 的输出路径为当前项目的 bin 目录， 他和 上面  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin) 做的其实是一个事情， 不过 上面是设置全局，下面只针对 hello3 这个可执行文件。
 set_target_properties(hello3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
