@@ -39,7 +39,7 @@ target_link_libraries(hello3 libformat)
 #        而 .dll 属于运行时目标, 必须用 RUNTIME_OUTPUT_DIRECTORY 单独指定, 否则会输出到默认目录
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 set_target_properties(libformat PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib   # 让 .dll 也输出到 lib 目录
+    RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin   # .dll 输出到 bin, 与 hello3.exe 放一起, 运行时可直接找到, 无需配置 PATH
 )
 # 设置hello3 的输出路径为当前项目的 bin 目录， 他和 上面  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin) 做的其实是一个事情， 不过 上面是设置全局，下面只针对 hello3 这个可执行文件。
 set_target_properties(hello3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
