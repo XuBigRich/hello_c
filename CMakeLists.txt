@@ -26,12 +26,39 @@ add_executable(hello2 ${SRC_LIST} ${SRC_LIST_SRC})
 # 3.通过共享库的方式创建可执行文件hello3
 # 设置共享库的源文件
 set(LIB_SRC src/format.c)
+# 创建可执行文件 hello3
+add_executable(hello3 main.c)
+# 一：自制动态库
 # 创建共享库 libformat.so   1.参数：库名称 2.参数：库类型 3.参数：库源文件
 add_library(libformat SHARED ${LIB_SRC})
-# 创建可执行文件 hello3，需要依赖 libformat.so
-add_executable(hello3 main.c)
-# 链接 libformat.so
+# 将可执行文件hello3 链接 libformat动态库
 target_link_libraries(hello3 libformat)
+# ----------------------------------------------------------------------------------------
+# 二：使用系统库（windows C:\Windows\System32、 linux /lib /usr/lib），下面是使用第三方库实例
+
+# 1. 设置/增加查找库的路径
+
+# Windows 下需要手动指定 MySQL 开发库的头文件路径（MySQL 程序本身不含开发头文件）
+if(WIN32)
+    set(MYSQL_DIR "D:/mysql-8.4.3-winx64" CACHE PATH "MySQL 安装目录")
+    include_directories(${MYSQL_DIR}/include)
+    # Windows 下把 MySQL 的 lib/vs14 也加入查找路径（mysqlclient.lib 在这里）
+    set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${MYSQL_DIR}/lib)
+endif()
+# Linux 下若通过包管理器安装，头文件已在 /usr/include/mysql，可省略此段。这里增加了 /usr/lib 这个路径
+if(UNIX)
+   set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /usr/lib)   
+endif()
+
+# 查找系统库
+find_library(mysql  libmysql)
+# 设置一个动态库集合、包含mysql库与 自定义的libformat库
+set(LIBS ${mysql} libformat)
+# 2. 链接系统库  将 hello3 链接系到库集合
+target_link_libraries(hello3 ${LIBS})
+
+# ----------------------------------------------------------------------------------------
+# 终： 设置库的输出路径
 # 设置库的输出路径
 # 注意1: 变量名必须是 CMake 内置的 LIBRARY_OUTPUT_PATH, 不能简写成 LIB_OUTPUT_PATH(那样 CMake 不识别)
 # 注意2: Windows 下 SHARED 库会生成 libformat.dll(运行时) 和 libformat.lib(导入库, 链接时用)
@@ -44,3 +71,21 @@ set_target_properties(libformat PROPERTIES
 # 设置hello3 的输出路径为当前项目的 bin 目录， 他和 上面  set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin) 做的其实是一个事情， 不过 上面是设置全局，下面只针对 hello3 这个可执行文件。
 set_target_properties(hello3 PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
+# Windows 运行时需要实际的 DLL；链接使用的 .lib 不能替代 DLL。
+# 构建 hello3 后，将 MySQL 客户端及其 OpenSSL 依赖复制到 exe 所在目录。
+if(WIN32)
+    foreach(MYSQL_RUNTIME_DLL IN ITEMS
+        "${MYSQL_DIR}/lib/libmysql.dll"
+        "${MYSQL_DIR}/bin/libssl-3-x64.dll"
+        "${MYSQL_DIR}/bin/libcrypto-3-x64.dll"
+    )
+        if(NOT EXISTS "${MYSQL_RUNTIME_DLL}")
+            message(FATAL_ERROR "MySQL runtime DLL not found: ${MYSQL_RUNTIME_DLL}")
+        endif()
+        add_custom_command(TARGET hello3 POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                "${MYSQL_RUNTIME_DLL}" "$<TARGET_FILE_DIR:hello3>"
+            VERBATIM
+        )
+    endforeach()
+endif()
