@@ -8,5 +8,7 @@
 
 char result1();
 
+char result2(int);
+
 
 #endif //HELLO_FORMAT_H

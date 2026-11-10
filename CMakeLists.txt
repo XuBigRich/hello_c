@@ -1,7 +1,20 @@
 #声明cmake最低版本
 cmake_minimum_required(VERSION 3.17)
 #设置项目名称
+# 接入 vcpkg：必须放在 project() 之前，供 CMake 初始化工具链时读取。
+# find_library() 仅查找已有库；自动安装依赖需要项目中的 vcpkg.json。
+set(CMAKE_TOOLCHAIN_FILE
+    "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+    CACHE FILEPATH "vcpkg toolchain file"
+)
+#  当前使用 MSVC，依赖使用 x64-windows。
+set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "vcpkg target triplet")
+set(VCPKG_HOST_TRIPLET "x64-windows" CACHE STRING "vcpkg host triplet")
+
 project(hello C)
+if(MSVC)
+    add_compile_options(/utf-8)
+endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #设置可执行文件输出路径，为当前项目源文件的/bin目录下，PROJECT_SOURCE_DIR的意思是当前项目的源文件目录， 这里需要注意 这行必须写在 add_executable 之前才生效
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
@@ -31,6 +44,7 @@ add_executable(hello3 main.c)
 # 一：自制动态库
 # 创建共享库 libformat.so   1.参数：库名称 2.参数：库类型 3.参数：库源文件
 add_library(libformat SHARED ${LIB_SRC})
+set_target_properties(libformat PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 # 将可执行文件hello3 链接 libformat动态库
 target_link_libraries(hello3 libformat)
 # ----------------------------------------------------------------------------------------
